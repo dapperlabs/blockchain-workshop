@@ -19,17 +19,17 @@ class Blockchain:
     difficulty = 2
 
     def __init__(self):
-        self.blockchain = []
+        self.blocks = []
         
-        genesis_block = Block(0, "0", [])    
+        genesis_block = Block(0, '0', [])    
         genesis_block.hash = genesis_block.compute_hash()    
-        self.blockchain.append(genesis_block)        
-    
+        self.blocks.append(genesis_block)
+        
     def __str__(self):
-        return '\n ⛓ \n'.join(map(str, self.blockchain))
+        return '\n ⛓ \n'.join(map(str, self.blocks))
     
     def get_last_block(self):
-        return self.blockchain[-1]
+        return self.blocks[-1]
     
     def add_block(self, block):  
         block_hash = block.compute_hash()       
@@ -39,5 +39,23 @@ class Blockchain:
         if not block_hash.startswith('0' * self.difficulty):
             return False
         block.hash = block_hash
-        self.blockchain.append(block)
+        self.blocks.append(block)
         return True
+
+
+def from_dump(chain_dump):
+    blockchain = Blockchain()
+
+    for idx, block_fields in enumerate(chain_dump):
+        block = Block(block_fields['height'],
+                    block_fields['previous_hash'],
+                    block_fields['transactions'])
+        
+        if idx > 0:
+            added = blockchain.add_block(block)
+            if not added:
+                return False
+        else:  
+            blockchain.blocks.append(block)
+    
+    return blockchain
