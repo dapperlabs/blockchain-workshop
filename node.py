@@ -20,15 +20,16 @@ class Node:
         self.peers.update(peers)
 
     def mine(self):                
-        new_block_height = self.blockchain.get_last_block().height + 1
         new_block_difficulty = self.blockchain.compute_next_difficulty()        
-        new_block_previous_hash = self.blockchain.get_last_block().hash
-        new_block_transactions = self.transaction_pool    
-        new_block_timestamp = time.time()      
         
         print('Mining difficulty=%d ...' % new_block_difficulty)
         
-        new_block = Block(new_block_height, new_block_difficulty, new_block_previous_hash, new_block_transactions, new_block_timestamp)        
+        new_block = Block(
+            height=self.blockchain.get_last_block().height + 1, 
+            difficulty=new_block_difficulty,
+            previous_hash=self.blockchain.get_last_block().hash, 
+            transactions=self.transaction_pool, 
+            timestamp=time.time())
 
         self.find_nonce(new_block)
 
@@ -37,13 +38,16 @@ class Node:
 
         self.transaction_pool = []
 
+        # todo, needed?
         return new_block.height
 
     def find_nonce(self, block):
         block.nonce = 0
         current_hash = block.compute_hash()
-        while not current_hash.startswith('0' * block.difficulty):
+        print( block.difficulty_to_target())
+        while not current_hash < block.difficulty_to_target():
             block.nonce += 1
+            block.timestamp = time.time()
             current_hash = block.compute_hash()        
     
     def sync_with_dump(self, blockchain_dump):
@@ -74,8 +78,12 @@ class Node:
             url = '{}/new_block_mined'.format(peer_address)
             requests.post(url, data=json.dumps(block.__dict__, sort_keys=True))
     
-    def run(self):        
-        while True:
+    def run(self):      
+        self.alive = True  
+        while self.alive:
             self.mine()
             print('Block %d mined!' % self.blockchain.get_last_block().height) 
-            print(self.blockchain)
+            # print(self.blockchain)
+    
+    def kill(self):
+        self.alive = False

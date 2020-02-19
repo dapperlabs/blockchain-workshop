@@ -2,9 +2,15 @@ from hashlib import sha256
 import json
 import time
 
-START_DIFFICULTY = 2
+START_DIFFICULTY = 4
 BLOCK_TIME_IN_SECONDS = 5
 
+class Transaction:
+    def __init__(self, from_pubkey, to_pubkey, amount):
+        self.from_pubkey = from_pubkey
+        self.to_pubkey = to_pubkey
+        self.amount = amount
+    
 class Block:
     def __init__(self, height, difficulty, previous_hash, transactions, timestamp):
         self.height = height        
@@ -12,18 +18,22 @@ class Block:
         self.previous_hash = previous_hash
         self.transactions = transactions
         self.timestamp = timestamp
+        self.nonce = 0
 
     def __str__(self):
-        return json.dumps(self.__dict__, sort_keys=True)
+        return 'block %d {diff=%d, previous_hash=%s, timestamp=%s, nonce=%d, transactions=%s}' % (
+            self.height, self.difficulty, self.previous_hash, self.timestamp, self.nonce, self.transactions)
 
     def compute_hash(self):
         return sha256(str(self).encode()).hexdigest()
+    
+    def difficulty_to_target(self):        
+        return format((2**256 - 1) >> self.difficulty, '064x')
 
 class Blockchain:    
 
     def __init__(self):
-        self.blocks = []
-        
+        self.blocks = []        
         self.difficulty = START_DIFFICULTY
 
         genesis_block = Block(1, self.difficulty, '0', [], time.time())    
@@ -37,11 +47,15 @@ class Blockchain:
         return self.blocks[-1]
     
     def add_block(self, block):  
-        block_hash = block.compute_hash()       
+        block_hash = block.compute_hash()
+
+        correct_difficulty = self.compute_next_difficulty()
         
         if block.previous_hash != self.get_last_block().hash:
             return False
-        if not block_hash.startswith('0' * block.difficulty):
+        if not block_hash < block.difficulty_to_target():
+            return False
+        if block.difficulty != correct_difficulty:
             return False
         
         block.hash = block_hash
@@ -51,7 +65,7 @@ class Blockchain:
         return True
     
     def compute_next_difficulty(self):        
-        if len(self.blocks) > 2:
+        if len(self.blocks) > 1:
             block_time_diff = self.get_last_block().timestamp - self.blocks[-2].timestamp                            
             if block_time_diff < BLOCK_TIME_IN_SECONDS:
                 return self.get_last_block().difficulty + 1

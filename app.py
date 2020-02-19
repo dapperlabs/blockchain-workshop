@@ -4,13 +4,13 @@ import requests
 import json
 import sys
 import threading
+import signal
 
 from node import Node
 
 app =  Flask(__name__)
 
 node = Node()
-
 
 @app.route('/new_transaction', methods=['POST'])
 def new_transaction():
@@ -93,11 +93,18 @@ def new_block_mined():
 
     return 'Block added', 201
 
+
 if len(sys.argv) != 2:
     print('Usage: python app.py PORT_NUMBER')
     raise SystemExit
 
 node_thread = threading.Thread(target=node.run)
 node_thread.start()
+
+def handle_killsig(signum,frame):    
+    print('\nGoodbye!')
+    node.kill()
+    raise SystemExit
+signal.signal(signal.SIGINT,handle_killsig) 
 
 app.run(debug=True, port=sys.argv[1], threaded=True, use_reloader=False)
