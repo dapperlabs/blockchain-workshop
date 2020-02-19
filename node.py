@@ -1,6 +1,8 @@
 from blockchain import Block, Blockchain, from_dump
 import requests
 import json
+import time
+
 
 class Node:
     def __init__(self):
@@ -17,16 +19,18 @@ class Node:
     def update_peers(self, peers):
         self.peers.update(peers)
 
-    def mine(self):
-        if not self.transaction_pool:            
-            return False
-        
-        new_block_height = self.blockchain.get_last_block().height + 1        
+    def mine(self):                
+        new_block_height = self.blockchain.get_last_block().height + 1
+        new_block_difficulty = self.blockchain.compute_next_difficulty()        
         new_block_previous_hash = self.blockchain.get_last_block().hash
-        new_block_transactions = self.transaction_pool
-        new_block = Block(new_block_height, new_block_previous_hash, new_block_transactions)        
+        new_block_transactions = self.transaction_pool    
+        new_block_timestamp = time.time()      
+        
+        print('Mining difficulty=%d ...' % new_block_difficulty)
+        
+        new_block = Block(new_block_height, new_block_difficulty, new_block_previous_hash, new_block_transactions, new_block_timestamp)        
 
-        self.find_nonce(new_block, self.blockchain.difficulty)
+        self.find_nonce(new_block)
 
         if not self.blockchain.add_block(new_block):            
             return False
@@ -35,10 +39,10 @@ class Node:
 
         return new_block.height
 
-    def find_nonce(self, block, difficulty):
+    def find_nonce(self, block):
         block.nonce = 0
         current_hash = block.compute_hash()
-        while not current_hash.startswith('0' * difficulty):
+        while not current_hash.startswith('0' * block.difficulty):
             block.nonce += 1
             current_hash = block.compute_hash()        
     
@@ -69,3 +73,9 @@ class Node:
         for peer_address in self.peers:
             url = '{}/new_block_mined'.format(peer_address)
             requests.post(url, data=json.dumps(block.__dict__, sort_keys=True))
+    
+    def run(self):        
+        while True:
+            self.mine()
+            print('Block %d mined!' % self.blockchain.get_last_block().height) 
+            print(self.blockchain)

@@ -3,12 +3,14 @@ from blockchain import Block
 import requests
 import json
 import sys
+import threading
 
 from node import Node
 
 app =  Flask(__name__)
 
 node = Node()
+
 
 @app.route('/new_transaction', methods=['POST'])
 def new_transaction():
@@ -95,4 +97,7 @@ if len(sys.argv) != 2:
     print('Usage: python app.py PORT_NUMBER')
     raise SystemExit
 
-app.run(debug=True, port=sys.argv[1])
+node_thread = threading.Thread(target=node.run)
+node_thread.start()
+
+app.run(debug=True, port=sys.argv[1], threaded=True, use_reloader=False)
