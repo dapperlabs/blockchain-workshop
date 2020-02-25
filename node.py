@@ -23,15 +23,16 @@ class Node:
         logger.info('Address generated! %s' % self.address())
     
     def address(self):
-        return self.private_key.publickey().exportKey('PEM')
+        return str(self.private_key.publickey().exportKey('PEM'))
     
     def find_nonce(self, block):
         block.nonce = 0
         current_hash = block.compute_hash()        
         while not current_hash < block.difficulty_to_target():
             block.nonce += 1
-            block.timestamp = time.time()
+            block.timestamp = time.time()            
             current_hash = block.compute_hash()       
+        print('MINED ' + str(block))
 
     def mine(self):      
         self.mining = True  
@@ -84,8 +85,9 @@ class Node:
         logger.info("Syncing ... dump size: %d current size: %d" %(len(blockchain_dump), self.blockchain.get_blockchain_size()))
         if len(blockchain_dump) > self.blockchain.get_blockchain_size():
             new_blockchain = Blockchain()
-            new_blockchain.blocks = blockchain_dump            
-            self.blockchain = new_blockchain                
+            # new_blockchain.blocks = blockchain_dump            
+            if new_blockchain.load_from(blockchain_dump):                
+                self.blockchain = new_blockchain             
         else:
             logger.info('Did not sync!')
     

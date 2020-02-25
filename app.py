@@ -10,6 +10,7 @@ import jsonpickle
 
 from node import Node
 from blockchain import Block
+
 dictConfig({
     'version': 1,
     'formatters': {'default': {
@@ -140,19 +141,19 @@ def consensus():
     
     return 'Done', 200
 
-# @app.route('/new_block_mined', methods=['POST'])
-# def new_block_mined():
-    # block_fields = request.get_json()
-    # # block = Block(block_fields['height'],
-    # #                 block_fields['previous_hash'],
-    # #                 block_fields['transactions'])
+@app.route('/new_block_mined', methods=['POST'])
+def new_block_mined():
+    block_fields = request.get_json()
+    block = Block(block_fields['height'],
+                    block_fields['previous_hash'],
+                    block_fields['transactions'])
     
-    # added = node.blockchain.add_block(block)
+    added = node.blockchain.add_block(block)
 
-    # if not added:
-    #     return 'The block was not added', 400
+    if not added:
+        return 'The block was not added', 400
 
-    # return 'Block added', 201
+    return 'Block added', 201
 
 def add_peer(peer_address):
     if peer_address not in peers:
