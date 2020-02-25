@@ -16,23 +16,13 @@ BLOCK_REWARD = 10
 
 class Node:
     def __init__(self):
-        self.transaction_pool = []
-        self.blockchain = Blockchain()        
-        self.mining = False        
-        self.private_key = RSA.generate(KEY_LENGTH, Random.new().read)        
-        logger.info('Address generated! %s' % self.address())
+        pass
     
     def address(self):
-        return str(self.private_key.publickey().exportKey('PEM'))
+        pass
     
     def find_nonce(self, block):
-        block.nonce = 0
-        current_hash = block.compute_hash()        
-        while not current_hash < block.difficulty_to_target():
-            block.nonce += 1
-            block.timestamp = time.time()            
-            current_hash = block.compute_hash()       
-        print('MINED ' + str(block))
+        pass
 
     def mine(self):      
         self.mining = True  

@@ -113,33 +113,7 @@ def add_peer_and_consensus():
 
 @app.route('/consensus', methods=['GET'])
 def consensus():    
-    longest_chain = None
-    current_size = node.blockchain.get_blockchain_size()
-
-    data = {'address': request.host_url}
-    headers = {'Content-Type': 'application/json'}
-
-    for peer_address in peers:    
-        response = requests.post(peer_address + '/hello',
-                                data=json.dumps(data), headers=headers)
-
-        if response.status_code == 200:        
-            new_peers = response.json()['peers']
-            for peer in new_peers:
-                add_peer(peer)
-
-            size = response.json()['chain_size']
-            if size > current_size:
-                longest_chain = response.json()['blocks']            
-                current_size = size            
-            
-        else:        
-            peers.remove(peer)
-    
-    if longest_chain:
-        node.sync_with_dump(longest_chain)
-    
-    return 'Done', 200
+    pass
 
 @app.route('/new_block_mined', methods=['POST'])
 def new_block_mined():
