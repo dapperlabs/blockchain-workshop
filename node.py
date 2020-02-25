@@ -83,9 +83,9 @@ class Node:
     def sync_with_dump(self, blockchain_dump):        
         logger.info("Syncing ... dump size: %d current size: %d" %(len(blockchain_dump), self.blockchain.get_blockchain_size()))
         if len(blockchain_dump) > self.blockchain.get_blockchain_size():
-            new_blockchain = Blockchain()            
-            if new_blockchain.load_from(blockchain_dump):                
-                self.blockchain = new_blockchain                
+            new_blockchain = Blockchain()
+            new_blockchain.blocks = blockchain_dump            
+            self.blockchain = new_blockchain                
         else:
             logger.info('Did not sync!')
     

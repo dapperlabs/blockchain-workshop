@@ -6,10 +6,10 @@ import sys
 import threading
 import signal
 from logging.config import dictConfig
+import jsonpickle 
 
 from node import Node
 from blockchain import Block
-
 dictConfig({
     'version': 1,
     'formatters': {'default': {
@@ -52,13 +52,10 @@ def stop_mining():
         return 'Success'
 
 @app.route('/info', methods=['GET'])
-def get_info():    
-    blockchain = []
-    for block in node.blockchain.blocks:
-        blockchain.append(block.__dict__)        
-    return json.dumps({'chain_size': node.blockchain.get_blockchain_size(),                       
+def get_info():
+    return jsonpickle.encode({'chain_size': node.blockchain.get_blockchain_size(),                       
                        'peers': peers,
-                       'blockchain': blockchain})
+                       'blocks': node.blockchain.blocks})
 
 @app.route('/new_transaction', methods=['POST'])
 def new_transaction():
@@ -132,7 +129,7 @@ def consensus():
 
             size = response.json()['chain_size']
             if size > current_size:
-                longest_chain = response.json()['blockchain']            
+                longest_chain = response.json()['blocks']            
                 current_size = size            
             
         else:        

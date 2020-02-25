@@ -2,6 +2,7 @@ from hashlib import sha256
 import json
 import time
 import logging
+import jsonpickle
 
 logger = logging.getLogger()
 
@@ -18,7 +19,7 @@ class Transaction:
         self.amount = amount            
     
     def __str__(self):
-        return json.dumps(self.__dict__, sort_keys=True)
+        return jsonpickle.encode(self)
     
     def compute_hash(self):
         tx = json.dumps({
@@ -37,10 +38,8 @@ class Block:
         self.nonce = 0
 
     def __str__(self):
-        return json.dumps(self.__dict__, sort_keys=True)
-        # return 'block %d {diff=%d, previous_hash=%s, timestamp=%s, nonce=%d, transactions=%s}' % (
-        #     self.height, self.difficulty, self.previous_hash, self.timestamp, self.nonce, self.transactions)
-
+        return jsonpickle.encode(self)
+    
     def compute_hash(self):
         return sha256(str(self).encode()).hexdigest()
     
@@ -86,7 +85,7 @@ class Blockchain:
 
         coinbase_found = False        
         for tx in block.transactions:
-            if tx.from_subkey == 'COINBASE':
+            if tx.from_pubkey == 'COINBASE':
                 if coinbase_found:
                     logger.error('Block %d is invalid: more than 1 COINBASE' % block.height)
                     return False
@@ -116,23 +115,3 @@ class Blockchain:
                 return self.get_last_block().difficulty - 1
         else:
             return START_DIFFICULTY
-
-    def load_from(self, chain_dump):
-        self.blocks = []
-        
-        for block_data in chain_dump:
-            block = Block(height=block_data['height'],
-                        difficulty=block_data['difficulty'],
-                        previous_hash=block_data['previous_hash'],
-                        transactions=block_data['transactions'],
-                        timestamp=block_data['timestamp'])
-            block.nonce = block_data['nonce']
-            
-            added = self.add_block(block)        
-            if not added:
-                logger.error('Load failed!')
-                return False
-            logger.info('Block %d processed successfuly!' % block.height)
-        
-        logger.info('Loaded successfuly!')
-        return True
