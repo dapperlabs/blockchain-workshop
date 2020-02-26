@@ -6,7 +6,6 @@ import sys
 import threading
 import signal
 from logging.config import dictConfig
-import jsonpickle 
 
 from node import Node
 from blockchain import Block
@@ -53,10 +52,13 @@ def stop_mining():
         return 'Success'
 
 @app.route('/info', methods=['GET'])
-def get_info():
-    return jsonpickle.encode({'chain_size': node.blockchain.get_blockchain_size(),                       
+def get_info():    
+    blocks = []
+    for block in node.blockchain.blocks:
+        blocks.append(str(block))
+    return json.dumps({'chain_size': node.blockchain.get_blockchain_size(),                       
                        'peers': peers,
-                       'blocks': node.blockchain.blocks})
+                       'blocks': blocks})
 
 @app.route('/new_transaction', methods=['POST'])
 def new_transaction():

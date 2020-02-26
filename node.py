@@ -20,10 +20,10 @@ class Node:
         self.blockchain = Blockchain()        
         self.mining = False        
         self.private_key = RSA.generate(KEY_LENGTH, Random.new().read)        
-        logger.info('Address generated! %s' % self.address())
+        logger.info('Address generated for node: %s' % self.address())
     
     def address(self):
-        return str(self.private_key.publickey().exportKey('PEM'))
+        return base64.b64encode(self.private_key.publickey().exportKey('DER')).decode()
     
     def find_nonce(self, block):
         block.nonce = 0
@@ -31,10 +31,9 @@ class Node:
         while not current_hash < block.difficulty_to_target():
             block.nonce += 1
             block.timestamp = time.time()            
-            current_hash = block.compute_hash()       
-        print('MINED ' + str(block))
+            current_hash = block.compute_hash()        
 
-    def mine(self):      
+    def mine(self):
         self.mining = True  
         while self.mining:
             if len(self.blockchain.blocks) == 0:
@@ -48,7 +47,8 @@ class Node:
                 coinbase_tx = Transaction(                    
                     from_pubkey='COINBASE',
                     to_pubkey=self.address(),
-                    amount=BLOCK_REWARD)                
+                    amount=BLOCK_REWARD)               
+                self.sign_transaction(coinbase_tx)
                 self.transaction_pool.append(coinbase_tx)
 
                 new_block = Block(
@@ -78,19 +78,20 @@ class Node:
             from_pubkey=self.address(),
             to_pubkey=transaction['to'],
             amount=transaction['amount'])
-        tx.signature = str(self.private_key.sign(tx.compute_hash().encode(),'')[0])
+        self.sign_transaction(tx)
         self.transaction_pool.append(tx)
     
     def sync_with_dump(self, blockchain_dump):        
         logger.info("Syncing ... dump size: %d current size: %d" %(len(blockchain_dump), self.blockchain.get_blockchain_size()))
         if len(blockchain_dump) > self.blockchain.get_blockchain_size():
-            new_blockchain = Blockchain()
-            # new_blockchain.blocks = blockchain_dump            
+            new_blockchain = Blockchain()            
             if new_blockchain.load_from(blockchain_dump):                
                 self.blockchain = new_blockchain             
         else:
             logger.info('Did not sync!')
     
+    def sign_transaction(self, tx):
+        tx.signature = self.private_key.sign(tx.compute_hash().encode(),'')[0]
     
     
     # todo

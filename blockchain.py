@@ -2,11 +2,12 @@ from hashlib import sha256
 import json
 import time
 import logging
-import jsonpickle
+from Crypto.PublicKey import RSA
+import base64
 
 logger = logging.getLogger()
 
-START_DIFFICULTY = 20
+START_DIFFICULTY = 10
 
 BLOCK_TIME_IN_SECONDS = 5
 
@@ -16,17 +17,31 @@ class Transaction:
     def __init__(self, from_pubkey, to_pubkey, amount):
         self.from_pubkey = from_pubkey
         self.to_pubkey = to_pubkey
-        self.amount = amount            
+        self.amount = amount    
+        self.signature = ''        
     
     def __str__(self):
-        return jsonpickle.encode(self)
+        return json.dumps({
+            'from': self.from_pubkey,
+            'to': self.to_pubkey,
+            'amount': self.amount,
+            'signature': self.signature})
     
-    def compute_hash(self):
-        tx = json.dumps({
+    def compute_hash(self):  
+        tx_str = json.dumps({
             'from': self.from_pubkey,
             'to': self.to_pubkey,
             'amount': self.amount})
-        return sha256(tx.encode()).hexdigest()
+        return sha256(tx_str.encode()).hexdigest()
+    
+    def verify_signature(self):        
+        pub_key = self.from_pubkey
+        if self.from_pubkey == 'COINBASE':
+            pub_key = self.to_pubkey
+        
+        key = RSA.importKey(base64.b64decode(pub_key))
+        # print(base64.b64encode(key.exportKey('DER')).decode())
+        print(key.verify(self.compute_hash(), self.signature))
     
 class Block:
     def __init__(self, height, difficulty, previous_hash, transactions, timestamp):
@@ -38,7 +53,15 @@ class Block:
         self.nonce = 0
 
     def __str__(self):        
-        return jsonpickle.encode(self)
+        tx_dump = [str(tx) for tx in self.transactions]
+        
+        return json.dumps({
+            'height': self.height,
+            'difficulty': self.difficulty,
+            'nonce': self.nonce,
+            'previous_hash': self.previous_hash,
+            'transactions': tx_dump,
+            'timestamp': self.timestamp})        
     
     def compute_hash(self):        
         tx_hashes = [tx.compute_hash() for tx in self.transactions]
@@ -78,7 +101,7 @@ class Blockchain:
     
     def add_block(self, block):                  
         block.hash = block.compute_hash()        
-        print(block)
+        
         if block.height > 1:            
             if block.difficulty != self.compute_next_difficulty():
                 logger.error('Block %d is invalid: block.difficulty is %d should be %d' % (block.height, block.difficulty, self.compute_next_difficulty()))
@@ -125,14 +148,30 @@ class Blockchain:
         else:
             return START_DIFFICULTY
     
-    def load_from(self, chain_dump):	
+    def load_from(self, json_dump):	
         self.blocks = []
 
-        for block_data in chain_dump:	
+        for block_data_json in json_dump:	
+            block_data = json.loads(block_data_json)
+
+            tx_list = []            
+            for tx in block_data['transactions']:                
+                tx_data = json.loads(tx)
+                tx = Transaction(
+                    from_pubkey=tx_data['from'],
+                    to_pubkey=tx_data['to'],
+                    amount=tx_data['amount'],
+                )
+                if tx.verify_signature():
+                    tx_list.append(tx)
+                else:
+                    logger.error('Invalid signature! %s' % str(tx))	
+                    return False	    
+
             block = Block(height=block_data['height'],	
                         difficulty=block_data['difficulty'],	
                         previous_hash=block_data['previous_hash'],	
-                        transactions=block_data['transactions'],	
+                        transactions=tx_list,	
                         timestamp=block_data['timestamp'])	
             block.nonce = block_data['nonce']	
 
