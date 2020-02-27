@@ -95,12 +95,8 @@ class Block:
                 to_pubkey=tx_data['to'],
                 amount=tx_data['amount'],
             )
-            tx.signature = tx_data['signature']
-            if tx.verify_signature():
-                tx_list.append(tx)
-            else:
-                logger.error('Invalid signature! %s' % str(tx))	
-                return False	    
+            tx.signature = tx_data['signature']            
+            tx_list.append(tx)            
         
         self.height = block_data['height']
         self.difficulty = block_data['difficulty']
@@ -162,8 +158,7 @@ class Blockchain:
 
             if tx.from_pubkey == 'COINBASE':
                 if coinbase_found:
-                    logger.error('Block %d is invalid: more than 1 COINBASE' % block.height)
-                    print(block)
+                    logger.error('Block %d is invalid: more than 1 COINBASE' % block.height)                    
                     return False
                 if tx.amount != BLOCK_REWARD:
                     logger.error('Block %d is invalid: invalid COINBASE amount %d' % (block.height, tx.amount))

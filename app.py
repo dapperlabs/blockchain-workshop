@@ -117,7 +117,8 @@ def add_peer_and_consensus():
     return consensus()    
 
 @app.route('/consensus', methods=['GET'])
-def consensus():    
+def consensus():   
+    logger.info('Running consensus ...') 
     longest_chain = None
     current_size = node.blockchain.get_blockchain_size()
 
@@ -157,7 +158,7 @@ def new_block_mined():
     received_block = Block()
     if received_block.load_from(block_json):
         if node.blockchain.add_block(received_block):
-            logger.info('Block %d received from the network!' % received_block.height)
+            logger.info('Block %d accepted from the network!' % received_block.height)
             node.new_block_received = True
             for peer_address in peers:        
                 if not request.remote_addr in peer_address:
@@ -168,14 +169,19 @@ def new_block_mined():
                     except requests.ConnectionError:
                         logger.info('Could not connect to %s!' % peer_address)            
             return 'Accepted', 201
-        else:
-            logger.info('Block %d rejected by add_block!' % received_block.height)
+        else:            
             return 'Rejected', 400    
     else:
         logger.info('Block %d rejected by load_from!' % received_block.height)
         return 'Rejected', 400 
     
 def announce_new_block(block):    
+    current_chain_size = node.blockchain.get_blockchain_size()
+    consensus()
+    if current_chain_size != node.blockchain.get_blockchain_size():
+        logger.info('Mined block %d not announced!' % block.height)
+        return
+
     logger.info('Announcing block %d to %d peers ...' % (block.height, len(peers)))
 
     data = str(block)
