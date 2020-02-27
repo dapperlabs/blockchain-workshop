@@ -129,7 +129,7 @@ def consensus():
             response = requests.post(peer_address + '/greet',
                                 data=json.dumps(data), headers=headers)
         except requests.ConnectionError:
-            logger.info('Could not connect to %s!' % peer_address)
+            logger.error('Could not connect to %s!' % peer_address)
             continue
 
         if response.status_code == 200:        
@@ -144,7 +144,7 @@ def consensus():
                 current_size = size            
             
         else:        
-            peers.remove(peer)
+            logger.error('Invalid response received %d' % response.status_code)
     
     if longest_chain:
         node.sync_with_dump(longest_chain)
@@ -159,6 +159,14 @@ def new_block_mined():
         if node.blockchain.add_block(received_block):
             logger.info('Block %d received from the network!' % received_block.height)
             node.new_block_received = True
+            for peer_address in peers:        
+                if not request.remote_addr in peer_address:
+                    try:
+                        url = peer_address + '/new_block_mined'
+                        requests.post(url, data=request.data, headers=request.headers)    
+                        logger.info('Forwarded to %s' % peer_address)    
+                    except requests.ConnectionError:
+                        logger.info('Could not connect to %s!' % peer_address)            
             return 'Accepted', 201
         else:
             logger.info('Block %d rejected by add_block!' % received_block.height)
@@ -190,12 +198,12 @@ def miner():
     logger.info('Miner stopped.')
 
 def add_peer(peer_address):
+    if peer_address.endswith('/'):
+        peer_address = peer_address[:-1]
+
     if peer_address not in peers:
         logger.info("New peer added: %s", peer_address)
-        if peer_address.endswith('/'):
-            peers.append(peer_address[:-1])
-        else:
-            peers.append(peer_address)
+        peers.append(peer_address)
     else:
         logger.info("Peer already registered: %s", peer_address)        
 

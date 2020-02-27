@@ -39,9 +39,7 @@ class Transaction:
         if self.from_pubkey == 'COINBASE':
             pub_key = self.to_pubkey
         
-        key = RSA.importKey(base64.b64decode(pub_key))
-        # print(base64.b64encode(key.exportKey('DER')).decode())
-        # print('verify ' + self.compute_hash())
+        key = RSA.importKey(base64.b64decode(pub_key))        
         return key.verify(self.compute_hash().encode(), [self.signature])
     
 class Block:
@@ -138,7 +136,11 @@ class Blockchain:
     def add_block(self, block):                  
         block.hash = block.compute_hash()        
         
-        if block.height > 1:            
+        if block.height > 1:  
+            if block.height != self.get_last_block().height + 1:
+                logger.error('Block %d is invalid: expected height is %d' % (block.height, self.get_last_block().height + 1))
+                return False
+
             if block.previous_hash != self.get_last_block().hash:                                                
                 logger.error('Block %d is invalid: block.previous_hash is %s should be %s' % (block.height, block.previous_hash, self.get_last_block().hash))
                 return False
