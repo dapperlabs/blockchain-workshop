@@ -198,10 +198,10 @@ class Blockchain:
             block_data = json.loads(block_data_json)
             if block.load_from(block_data):                
                 if self.add_block(block):	
-                    logger.info('Block %d processed successfuly!' % block.height)	                    
+                    logger.info('Block %d processed successfully!' % block.height)	                    
                 else:
                     logger.error('Load failed!')	
                     return False	
 
-        logger.info('Loaded successfuly!')	
+        logger.info('Loaded successfully!')	
         return True

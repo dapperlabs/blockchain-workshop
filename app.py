@@ -176,11 +176,11 @@ def new_block_mined():
         return 'Rejected', 400 
     
 def announce_new_block(block):    
-    current_chain_size = node.blockchain.get_blockchain_size()
-    consensus()
-    if current_chain_size != node.blockchain.get_blockchain_size():
-        logger.info('Mined block %d not announced!' % block.height)
-        return
+    # current_chain_size = node.blockchain.get_blockchain_size()
+    # consensus()
+    # if current_chain_size != node.blockchain.get_blockchain_size():
+    #     logger.info('Mined block %d not announced!' % block.height)
+    #     return
 
     logger.info('Announcing block %d to %d peers ...' % (block.height, len(peers)))
 
