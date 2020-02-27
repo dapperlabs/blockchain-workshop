@@ -34,21 +34,32 @@ peers = []
 
 logger = logging.getLogger()
 
+mining = False
+
 @app.route('/start_mining', methods=['GET'])
 def start_mining():    
-    if node.mining:
+    global mining
+
+    if mining:
         return 'Already mining!', 400
     else:
-        miner_thread = threading.Thread(target=node.mine)
+        
+        mining = True  
+        
+        miner_thread = threading.Thread(target=miner)
         miner_thread.start()
+        
         return 'Success'
 
 @app.route('/stop_mining', methods=['GET'])
 def stop_mining():    
-    if not node.mining:
+    global mining
+
+    if not mining:
         return 'Already not mining!', 400
     else:
-        node.stop_mining()
+        logger.info('Stopping miner ...')        
+        mining = False        
         return 'Success'
 
 @app.route('/info', methods=['GET'])
@@ -128,7 +139,8 @@ def consensus():
         if response.status_code == 200:        
             new_peers = response.json()['peers']
             for peer in new_peers:
-                add_peer(peer)
+                if peer != request.host_url:
+                    add_peer(peer)
 
             size = response.json()['chain_size']
             if size > current_size:
@@ -145,17 +157,37 @@ def consensus():
 
 @app.route('/new_block_mined', methods=['POST'])
 def new_block_mined():
-    block_fields = request.get_json()
-    block = Block(block_fields['height'],
-                    block_fields['previous_hash'],
-                    block_fields['transactions'])
+    block_json = request.get_json()
+    received_block = Block()
+    if received_block.load_from(block_json):
+        if node.blockchain.add_block(received_block):
+            logger.info('Block %d received from the network!' % received_block.height)
+            node.new_block_received = True
+            return 'Accepted', 201
+        else:
+            logger.info('Block %d rejected by add_block!' % received_block.height)
+            return 'Rejected', 400    
+    else:
+        logger.info('Block %d rejected by load_from!' % received_block.height)
+        return 'Rejected', 400 
     
-    added = node.blockchain.add_block(block)
+def announce_new_block(block):    
+    logger.info('Announcing block %d to %d peers ...' % (block.height, len(peers)))
 
-    if not added:
-        return 'The block was not added', 400
+    data = str(block)
+    headers = {'Content-Type': 'application/json'}
+    
+    for peer_address in peers:
+        url = peer_address + '/new_block_mined'
+        requests.post(url, data=data, headers=headers)    
+        logger.info('Announced to %s' % peer_address)
 
-    return 'Block added', 201
+def miner():    
+    while mining:
+        if node.mine_block():
+            announce_new_block(node.blockchain.get_last_block())
+        node.new_block_received = False
+    logger.info('Miner stopped.')
 
 def add_peer(peer_address):
     if peer_address not in peers:

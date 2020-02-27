@@ -18,7 +18,7 @@ class Node:
     def __init__(self):
         self.transaction_pool = []
         self.blockchain = Blockchain()        
-        self.mining = False        
+        self.new_block_received = False        
         self.private_key = RSA.generate(KEY_LENGTH, Random.new().read)        
         logger.info('Address generated for node: %s' % self.address())
     
@@ -29,48 +29,55 @@ class Node:
         block.nonce = 0
         current_hash = block.compute_hash()        
         while not current_hash < block.difficulty_to_target():
+            if self.new_block_received:                
+                break
             block.nonce += 1
             block.timestamp = time.time()            
             current_hash = block.compute_hash()        
 
-    def mine(self):
-        self.mining = True  
-        while self.mining:
-            if len(self.blockchain.blocks) == 0:
-                self.blockchain.create_genesis_block()
-                logger.info('Genesis block created!') 
-            else:
-                new_block_difficulty = self.blockchain.compute_next_difficulty()        
+    def mine_block(self):        
+        if len(self.blockchain.blocks) == 0:
+            self.blockchain.create_genesis_block()
+            logger.info('Genesis block created!') 
+        else:
+            new_block_difficulty = self.blockchain.compute_next_difficulty()        
+
+            tx_list = []
+            for tx in self.transaction_pool:
+                tx_list.append(tx)
+
+            block_candidate = Block()            
+            block_candidate.fill_block(
+                height=self.blockchain.get_last_block().height + 1, 
+                difficulty=new_block_difficulty,
+                previous_hash=self.blockchain.get_last_block().hash, 
+                transactions=tx_list, 
+                timestamp=time.time())
             
-                logger.info('[difficulty=%d] Mining block %d ...' % (new_block_difficulty, self.blockchain.get_last_block().height + 1))
-                
-                coinbase_tx = Transaction(                    
-                    from_pubkey='COINBASE',
-                    to_pubkey=self.address(),
-                    amount=BLOCK_REWARD)               
-                self.sign_transaction(coinbase_tx)
-                self.transaction_pool.append(coinbase_tx)
+            coinbase_tx = Transaction(                    
+                from_pubkey='COINBASE',
+                to_pubkey=self.address(),
+                amount=BLOCK_REWARD)               
+            self.sign_transaction(coinbase_tx)
+            block_candidate.transactions.append(coinbase_tx)
 
-                new_block = Block(
-                    height=self.blockchain.get_last_block().height + 1, 
-                    difficulty=new_block_difficulty,
-                    previous_hash=self.blockchain.get_last_block().hash, 
-                    transactions=self.transaction_pool, 
-                    timestamp=time.time())
+            logger.info('Mining block %d ... [difficulty=%d] [target=%s]' %
+                (block_candidate.height, block_candidate.difficulty, block_candidate.difficulty_to_target()))
 
-                self.find_nonce(new_block)
+            self.find_nonce(block_candidate)
 
-                if not self.blockchain.add_block(new_block):            
-                    logger.error('Mined block %d discarded!' % self.blockchain.get_last_block().height) 
+            if self.new_block_received:
+                logger.info('Skipped block %d' % block_candidate.height)            
+                self.new_block_received = False
+                return False
+            else:                            
+                if not self.blockchain.add_block(block_candidate):            
+                    logger.error('Mined block %d discarded!' % block_candidate.height)
+                    return False
                 else:
                     self.transaction_pool = []
-                    logger.info('Block %d mined!' % self.blockchain.get_last_block().height)
-        
-        logger.info('Miner stopped.')
-    
-    def stop_mining(self):
-        logger.info('Stopping miner ...')        
-        self.mining = False
+                    logger.info('Block %d mined!' % block_candidate.height)            
+                    return True
     
     def new_transaction(self, transaction):
         # todo: check tx validity (balance)
@@ -78,7 +85,7 @@ class Node:
             from_pubkey=self.address(),
             to_pubkey=transaction['to'],
             amount=transaction['amount'])
-        self.sign_transaction(tx)
+        self.sign_transaction(tx)        
         self.transaction_pool.append(tx)
     
     def sync_with_dump(self, blockchain_dump):        
@@ -86,17 +93,12 @@ class Node:
         if len(blockchain_dump) > self.blockchain.get_blockchain_size():
             new_blockchain = Blockchain()            
             if new_blockchain.load_from(blockchain_dump):                
-                self.blockchain = new_blockchain             
+                self.blockchain = new_blockchain
+                self.new_block_received = True
         else:
             logger.info('Did not sync!')
     
-    def sign_transaction(self, tx):
+    def sign_transaction(self, tx):                
         tx.signature = self.private_key.sign(tx.compute_hash().encode(),'')[0]
     
-    
-    # todo
-    # def announce_new_block(self, block):    
-    #     for peer_address in self.peers:
-    #         url = '{}/new_block_mined'.format(peer_address)
-    #         requests.post(url, data=json.dumps(block.__dict__, sort_keys=True))    
 

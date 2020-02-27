@@ -41,10 +41,19 @@ class Transaction:
         
         key = RSA.importKey(base64.b64decode(pub_key))
         # print(base64.b64encode(key.exportKey('DER')).decode())
-        print(key.verify(self.compute_hash(), self.signature))
+        # print('verify ' + self.compute_hash())
+        return key.verify(self.compute_hash().encode(), [self.signature])
     
 class Block:
-    def __init__(self, height, difficulty, previous_hash, transactions, timestamp):
+    def __init__(self):        
+        self.height = -1
+        self.difficulty = 0
+        self.previous_hash = ''
+        self.transactions = []
+        self.timestamp = time.time()
+        self.nonce = 0
+
+    def fill_block(self, height, difficulty, previous_hash, transactions, timestamp):
         self.height = height        
         self.difficulty = difficulty
         self.previous_hash = previous_hash
@@ -77,6 +86,32 @@ class Block:
     
     def difficulty_to_target(self):        
         return format((2**256 - 1) >> self.difficulty, '064x')        
+    
+    def load_from(self, block_data):        
+        # block_data = json.loads(block_data_json)
+        tx_list = []            
+        for tx in block_data['transactions']:                
+            tx_data = json.loads(tx)
+            tx = Transaction(
+                from_pubkey=tx_data['from'],
+                to_pubkey=tx_data['to'],
+                amount=tx_data['amount'],
+            )
+            tx.signature = tx_data['signature']
+            if tx.verify_signature():
+                tx_list.append(tx)
+            else:
+                logger.error('Invalid signature! %s' % str(tx))	
+                return False	    
+        
+        self.height = block_data['height']
+        self.difficulty = block_data['difficulty']
+        self.previous_hash = block_data['previous_hash']
+        self.transactions = tx_list
+        self.timestamp = block_data['timestamp']
+        self.nonce = block_data['nonce']	        
+        
+        return True
 
 class Blockchain:    
 
@@ -85,7 +120,8 @@ class Blockchain:
         self.balances = {}
     
     def create_genesis_block(self):
-        genesis_block = Block(
+        genesis_block = Block()
+        genesis_block.fill_block(
             height=1, 
             difficulty=START_DIFFICULTY,
             previous_hash='0',
@@ -103,10 +139,6 @@ class Blockchain:
         block.hash = block.compute_hash()        
         
         if block.height > 1:            
-            if block.difficulty != self.compute_next_difficulty():
-                logger.error('Block %d is invalid: block.difficulty is %d should be %d' % (block.height, block.difficulty, self.compute_next_difficulty()))
-                return False
-
             if block.previous_hash != self.get_last_block().hash:                                                
                 logger.error('Block %d is invalid: block.previous_hash is %s should be %s' % (block.height, block.previous_hash, self.get_last_block().hash))
                 return False
@@ -115,11 +147,21 @@ class Blockchain:
                 logger.error('Block %d is invalid: block.hash is %s should be smaller than %s' % (block.height, block.hash, block.difficulty_to_target()))
                 return False        
 
+            if block.difficulty != self.compute_next_difficulty():
+                logger.error('Block %d is invalid: block.difficulty is %d should be %d' % (block.height, block.difficulty, self.compute_next_difficulty()))
+                return False
+
         coinbase_found = False        
         for tx in block.transactions:
+
+            if not tx.verify_signature():
+                logger.error('Block %d is invalid: invalid signature!' % block.height)
+                return False
+
             if tx.from_pubkey == 'COINBASE':
                 if coinbase_found:
                     logger.error('Block %d is invalid: more than 1 COINBASE' % block.height)
+                    print(block)
                     return False
                 if tx.amount != BLOCK_REWARD:
                     logger.error('Block %d is invalid: invalid COINBASE amount %d' % (block.height, tx.amount))
@@ -152,34 +194,14 @@ class Blockchain:
         self.blocks = []
 
         for block_data_json in json_dump:	
+            block = Block()
             block_data = json.loads(block_data_json)
-
-            tx_list = []            
-            for tx in block_data['transactions']:                
-                tx_data = json.loads(tx)
-                tx = Transaction(
-                    from_pubkey=tx_data['from'],
-                    to_pubkey=tx_data['to'],
-                    amount=tx_data['amount'],
-                )
-                if tx.verify_signature():
-                    tx_list.append(tx)
+            if block.load_from(block_data):                
+                if self.add_block(block):	
+                    logger.info('Block %d processed successfuly!' % block.height)	                    
                 else:
-                    logger.error('Invalid signature! %s' % str(tx))	
-                    return False	    
-
-            block = Block(height=block_data['height'],	
-                        difficulty=block_data['difficulty'],	
-                        previous_hash=block_data['previous_hash'],	
-                        transactions=tx_list,	
-                        timestamp=block_data['timestamp'])	
-            block.nonce = block_data['nonce']	
-
-            added = self.add_block(block)        	
-            if not added:	
-                logger.error('Load failed!')	
-                return False	
-            logger.info('Block %d processed successfuly!' % block.height)	
+                    logger.error('Load failed!')	
+                    return False	
 
         logger.info('Loaded successfuly!')	
         return True
