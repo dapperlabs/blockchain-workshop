@@ -166,15 +166,18 @@ class Blockchain:
                 if tx.amount != BLOCK_REWARD:
                     logger.error('Block %d is invalid: invalid COINBASE amount %d' % (block.height, tx.amount))
                     return False
-                coinbase_found = True
+                coinbase_found = True                
             else:
-                if self.balances[tx.from_pubkey] < tx.amount:
+                if not tx.from_pubkey in self.balances or self.balances[tx.from_pubkey] < tx.amount:
                     logger.error('Block %d is invalid: insufficient funds %d address %s' % (block.height, tx.amount, tx.from_pubkey))
                     return False
-                else:
-                    # todo: verify signature!
-                    self.balances[tx.from_pubkey] -= tx.amount
-                    self.balances[tx.to_pubkey] += tx.amount
+                else:                    
+                    self.balances[tx.from_pubkey] -= tx.amount                    
+            
+            if tx.to_pubkey in self.balances:
+                self.balances[tx.to_pubkey] += tx.amount
+            else:
+                self.balances[tx.to_pubkey] = tx.amount
 
         self.blocks.append(block)        
         

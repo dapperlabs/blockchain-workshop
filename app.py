@@ -78,34 +78,26 @@ def new_transaction():
 
     for field in required_fields:
         if not req_data.get(field):
-            return 'Invalid request: missing field %s' % field, 400    
+            return 'Invalid request: missing field %s' % field, 400        
     
-    node.new_transaction(req_data)
+    if node.new_transaction(req_data):
+        return 'Success', 201
+    else:
+        return 'Failed', 400
 
-    return 'Success', 201
-
-# @app.route('/mine', methods=['GET'])
-# def mine_transaction_pool():
-#     result = node.mine()
-#     if not result:
-#         return 'Transaction pool is empty'
-#     else:
-#         chain_length = len(node.blockchain)
-#         node.consensus()
-#         if chain_length == len(node.blockchain.chain):            
-#             node.announce_new_block(node.blockchain.get_last_block)
-#         return 'Block #{} is mined.'.format(node.blockchain.get_last_block.index)    
+@app.route('/balances', methods=['GET'])
+def balances():    
+    return json.dumps(node.blockchain.balances)    
 
 @app.route('/tx_pool', methods=['GET'])
 def get_tx_pool():
     transactions = []
     for tx in node.transaction_pool:
-        transactions.append(tx.__dict__)
-    # return json.dumps({'blockchain': blockchain})
+        transactions.append(str(tx))    
     return json.dumps(transactions)    
 
-@app.route('/hello', methods=['POST'])
-def hello():    
+@app.route('/greet', methods=['POST'])
+def greet():    
     peer_address = request.get_json()['address']
     if not peer_address:
         return 'Missing address', 400
@@ -133,13 +125,17 @@ def consensus():
     headers = {'Content-Type': 'application/json'}
 
     for peer_address in peers:    
-        response = requests.post(peer_address + '/hello',
+        try:
+            response = requests.post(peer_address + '/greet',
                                 data=json.dumps(data), headers=headers)
+        except requests.ConnectionError:
+            logger.info('Could not connect to %s!' % peer_address)
+            continue
 
         if response.status_code == 200:        
             new_peers = response.json()['peers']
             for peer in new_peers:
-                if peer != request.host_url:
+                if not peer.startswith(request.host_url):
                     add_peer(peer)
 
             size = response.json()['chain_size']
@@ -177,10 +173,14 @@ def announce_new_block(block):
     data = str(block)
     headers = {'Content-Type': 'application/json'}
     
-    for peer_address in peers:
-        url = peer_address + '/new_block_mined'
-        requests.post(url, data=data, headers=headers)    
-        logger.info('Announced to %s' % peer_address)
+    for peer_address in peers:        
+        try:
+            url = peer_address + '/new_block_mined'
+            requests.post(url, data=data, headers=headers)    
+            logger.info('Announced to %s' % peer_address)    
+        except requests.ConnectionError:
+            logger.info('Could not connect to %s!' % peer_address)            
+        
 
 def miner():    
     while mining:
@@ -192,7 +192,10 @@ def miner():
 def add_peer(peer_address):
     if peer_address not in peers:
         logger.info("New peer added: %s", peer_address)
-        peers.append(peer_address)
+        if peer_address.endswith('/'):
+            peers.append(peer_address[:-1])
+        else:
+            peers.append(peer_address)
     else:
         logger.info("Peer already registered: %s", peer_address)        
 

@@ -79,14 +79,18 @@ class Node:
                     logger.info('Block %d mined!' % block_candidate.height)            
                     return True
     
-    def new_transaction(self, transaction):
-        # todo: check tx validity (balance)
+    def new_transaction(self, transaction):                        
+        if not self.address() in self.blockchain.balances or self.blockchain.balances[self.address()] < transaction['amount']:
+            logger.error('You dont have %d!' % transaction['amount'])
+            return False
         tx = Transaction(
             from_pubkey=self.address(),
             to_pubkey=transaction['to'],
             amount=transaction['amount'])
         self.sign_transaction(tx)        
         self.transaction_pool.append(tx)
+        logger.info('Transaction %d to %s added to transaction pool!' % (transaction['amount'], transaction['to']))
+        return True
     
     def sync_with_dump(self, blockchain_dump):        
         logger.info("Syncing ... dump size: %d current size: %d" %(len(blockchain_dump), self.blockchain.get_blockchain_size()))
