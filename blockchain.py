@@ -73,7 +73,16 @@ class Block:
             'timestamp': self.timestamp})        
     
     def compute_hash(self):        
-        pass
+        tx_hashes = [tx.compute_hash() for tx in self.transactions]
+        
+        block = json.dumps({
+            'height': self.height,
+            'difficulty': self.difficulty,
+            'nonce': self.nonce,
+            'previous_hash': self.previous_hash,
+            'transactions': ','.join(tx_hashes),
+            'timestamp': self.timestamp})
+        return sha256(block.encode()).hexdigest()
     
     def difficulty_to_target(self):        
         return format((2**256 - 1) >> self.difficulty, '064x')        
@@ -107,7 +116,8 @@ class Block:
 class Blockchain:    
 
     def __init__(self):
-        pass
+        self.blocks = []
+        self.balances = {}
     
     def create_genesis_block(self):
         genesis_block = Block()
