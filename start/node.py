@@ -5,10 +5,9 @@ import requests
 import json
 import time
 import logging
-import Crypto
-from Crypto.PublicKey import RSA
-from Crypto import Random
+import random
 import base64
+import string
 
 # get logger to print stuff
 logger = logging.getLogger()
@@ -32,14 +31,14 @@ class Node:
         self.new_block_received = False        
         # generate a key for this node. this key is this node's identity and is used to sign transactions
         # on behalf of this node.
-        self.private_key = RSA.generate(KEY_LENGTH, Random.new().read)        
+        self.private_key = ''.join(random.choice(string.ascii_lowercase) for i in range(30)) 
         logger.info('Address generated for node: %s' % self.address())
     
     # address returns the address for this node
     # for simplicity we define address as the public key of this node
     def address(self):
         # we use a DER dump of the public key to calculate the address. DER is basically a binary dump of the public key.
-        return base64.b64encode(self.private_key.publickey().exportKey('DER')).decode()
+        return self.private_key
     
     # find_nonce receives a block and tries nonces until the block hash is smaller than our target (which is
     # calculated based on difficulty). This actually 'solves' a block!
@@ -149,5 +148,4 @@ class Node:
     # sign_transaction signs a transaction using the nodes private key
     def sign_transaction(self, tx):                
         # RSA sign
-        tx.signature = self.private_key.sign(tx.compute_hash().encode(),'')[0]   
-
+        tx.signature = "no signature"   

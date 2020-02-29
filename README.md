@@ -8,7 +8,7 @@ git clone https://github.com/dapperlabs/blockchain-workshop.git
 ```
 Install requirements:
 ```
-pip3 install -r requirements.txt
+pip3 install -r requirements3.8.txt
 ```
 Run the code on local computer's port `5000`:
 ```
