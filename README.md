@@ -39,12 +39,12 @@ The code provides these RESTful endpoints:
 * `GET /stop_mining` instructs a node to stop mining. This will return an error if the node is already stopped.
 * `GET /balances` returns a list of all addresses along with their balances, according to this node's version of the blockchain balances do not include transactions not yet mined, it also has everyones balance because in a blockchain everybody knows what everybody else owns!
 * `GET /tx_pool` returns list of transactions in the transaction pool. These transactions are created but not yet mined! Remember transactions in tx_pool are not yet executed by the blockchain. They will be final when they are mined in a block.
-* `POST /add_peer` adds a new peer to our node and syncs with it. This endpoint adds the peer to the node's list and calls consensus. Consensus checks the blockchain size on all peers (including the new one) and syncs with the longest chain.
+* `POST /add_peer` adds a new peer to our node and syncs with it. It needs `address` field in the request to identify the peer. This endpoint adds the peer to the node's list and calls consensus. Consensus checks the blockchain size on all peers (including the new one) and syncs with the longest chain.
 * `POST /greet` greets another node who wants to sync with this node. It needs `address` field in the request to identify the peer. Retrurns `get_info` to the new node.
 * `GET /consensus` calls `/greet` on all known peers to find out about their blockchain and its size. It then syncs with the node with the longest blockchain.
 * `POST /new_block_mined` is used to receive new blocks from the network as they are mined. This endpoint needs the JSON dump of the new block. An important thing to note here is the node checks the new block closely to make sure it is valid for our current version of the chain. If the new block is valid it's also propagated to our peer list so others know about this block. This is an important function to keep all nodes in sync with each other's version of the blockchain. 
 
-We suggest using Postman to interact with your node. You can also use `curl` if you are on Linux or Mac and feel adventurous!
+We suggest using Postman to interact with your node, you can import the `ubc-blockchain-workshop.postman_collection.json` for a collection of requests. You can also use `curl` if you are on Linux or Mac and feel adventurous!
 
 
 
