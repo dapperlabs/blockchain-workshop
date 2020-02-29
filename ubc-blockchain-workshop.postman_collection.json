@@ -1,0 +1,180 @@
+{
+	"info": {
+		"_postman_id": "1286f990-3283-4396-ae26-78e0fb0eec2c",
+		"name": "ubc-blockchain-workshop",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "get blockchain",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{NODE_ENDPOINT}}/info",
+					"host": [
+						"{{NODE_ENDPOINT}}"
+					],
+					"path": [
+						"info"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "new transaction",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"name": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n\t\"to\":\"someone\",\n\t\"amount\":10\n}"
+				},
+				"url": {
+					"raw": "{{NODE_ENDPOINT}}/new_transaction",
+					"host": [
+						"{{NODE_ENDPOINT}}"
+					],
+					"path": [
+						"new_transaction"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "start mining",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{NODE_ENDPOINT}}/start_mining",
+					"host": [
+						"{{NODE_ENDPOINT}}"
+					],
+					"path": [
+						"start_mining"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "balances",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{NODE_ENDPOINT}}/balances",
+					"host": [
+						"{{NODE_ENDPOINT}}"
+					],
+					"path": [
+						"balances"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "stop mining",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{NODE_ENDPOINT}}/stop_mining",
+					"host": [
+						"{{NODE_ENDPOINT}}"
+					],
+					"path": [
+						"stop_mining"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "transaction pool",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{NODE_ENDPOINT}}/tx_pool",
+					"host": [
+						"{{NODE_ENDPOINT}}"
+					],
+					"path": [
+						"tx_pool"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "add peer",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"name": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n\t\"address\":\"http://localhost:3051\"\n}"
+				},
+				"url": {
+					"raw": "{{NODE_ENDPOINT}}/add_peer",
+					"host": [
+						"{{NODE_ENDPOINT}}"
+					],
+					"path": [
+						"add_peer"
+					]
+				}
+			},
+			"response": []
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"id": "dd314761-79ef-4ec9-85b2-0f04c80f5d79",
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"id": "4da1176f-4631-485c-9877-8185aeb38c95",
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"id": "8c2a370c-3ecb-4183-87b8-127ba7d8166d",
+			"key": "NODE_ENDPOINT",
+			"value": "localhost:5000",
+			"type": "string"
+		}
+	]
+}
