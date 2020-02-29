@@ -173,13 +173,7 @@
 		{
 			"id": "8c2a370c-3ecb-4183-87b8-127ba7d8166d",
 			"key": "NODE_ENDPOINT",
-			"value": "localhost:3050",
-			"type": "string"
-		},
-		{
-			"id": "1130cc58-ad8c-4525-a800-9d5e5063f96c",
-			"key": "MY_PUBLIC_KEY",
-			"value": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAjM6bk/KsiSYJg3SYTfPWrUXdwZf250PeNFvE7+I0x4shnr3VytOoiQvY97AvRfq/zIxxMnVFceNUNlPm2hKEM/a6GgH9I4EhIhRJ7JgdT0WGBuwH24gvFqhIeRVEH92jTwUQeiY/7DzKHXrgLr0dSfkincYCDLjtwtBLU6OAXEZD1V4VBptNXaNiBaDaV0jGs4QhbUXvwuH+JI5fsxweH3+tCjp5WUEmV/NczaAPcdizUTl3Qxtj1PEQdU4qjwrcdTzCu8lkxfxFEO8D44tDw1QqN+1GApxs9iHQYHRSF4ox1G6r47PkIDDmdQcRikfsDwOolbXkGjDSQvkmstu8JwIDAQAB",
+			"value": "localhost:5000",
 			"type": "string"
 		}
 	]
