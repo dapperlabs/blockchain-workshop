@@ -2,7 +2,7 @@
 This repository contains code for a simple and educational blockchain node in Python. Multiple instances of this code, if connected, form a multi-node blockchain. These instances can be run on different computers, or the same computer using different ports. You can issue commands and get information from the node using HTTP RESTful endpoints.
 
 ## Installation
-You will need python3 and pip3 to run this code. First checkout the code from the repo:
+You will need `python3` and `pip3` to run this code. First checkout the code from the repo:
 ```
 git checkout https://github.com/dapperlabs/blockchain-workshop.git
 ```
@@ -10,7 +10,7 @@ Install requirements:
 ```
 pip3 install -r requirements.txt
 ```
-Run the code on local computer's port 5000:
+Run the code on local computer's port `5000`:
 ```
 python3 app.py 5000
 ```
@@ -33,14 +33,14 @@ Open your browser and navigate to `http://localhost:5000/info`. You should see:
 
 ## Endpoints Reference
 The code provides these RESTful endpoints:
-* `GET /info` gives basic information about this node. This endpoint returns the current blockchain size, a list of this node's peers and the full blockchain for this node. You can use this to debug your node. This endpoint is also used, when another peer wants to sync with this node's blockchain.
-* `POST /new_transaction` creates a new transaction! You need to provide 'to' and 'amount'. It creates a new transaction moving coins from this node's wallet to the address specified in 'to' (which may be invalid!). This transaction is added to the node's transaction pool until it is mined in a block, and thus valid on our blockchain!
+* `GET /info` gives basic information about this node. This endpoint returns the current blockchain size, a list of this node's peers and the full blockchain dump for this node. You can use this to debug your node. This endpoint is also used, when another peer wants to sync with this node's blockchain.
+* `POST /new_transaction` creates a new transaction! You need to provide `to` and `amount`. It creates a new transaction moving coins from this node's wallet to the address specified in `to` (which may be invalid!). This transaction is added to the node's transaction pool until it is mined in a block, and thus valid on our blockchain!
 * `GET /start_mining` instructs a node to start mining. This will return an error if the node is already mining.
 * `GET /stop_mining` instructs a node to stop mining. This will return an error if the node is already stopped.
 * `GET /balances` returns a list of all addresses along with their balances, according to this node's version of the blockchain balances do not include transactions not yet mined, it also has everyones balance because in a blockchain everybody knows what everybody else owns!
 * `GET /tx_pool` returns list of transactions in the transaction pool. These transactions are created but not yet mined! Remember transactions in tx_pool are not yet executed by the blockchain. They will be final when they are mined in a block.
 * `POST /add_peer` adds a new peer to our node and syncs with it. This endpoint adds the peer to the node's list and calls consensus. Consensus checks the blockchain size on all peers (including the new one) and syncs with the longest chain.
-* `POST /greet` greets another node who wants to sync with this node. It needs 'address' field in the request to identify the peer. Retrurns get_info to the new node.
+* `POST /greet` greets another node who wants to sync with this node. It needs `address` field in the request to identify the peer. Retrurns `get_info` to the new node.
 * `GET /consensus` calls `/greet` on all known peers to find out about their blockchain and its size. It then syncs with the node with the longest blockchain.
 * `POST /new_block_mined` is used to receive new blocks from the network as they are mined. This endpoint needs the JSON dump of the new block. An important thing to note here is the node checks the new block closely to make sure it is valid for our current version of the chain. If the new block is valid it's also propagated to our peer list so others know about this block. This is an important function to keep all nodes in sync with each other's version of the blockchain. 
 
