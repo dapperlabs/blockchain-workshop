@@ -2,9 +2,9 @@
 This repository contains code for a simple and educational blockchain node in Python. Multiple instances of this code, if connected, form a multi-node blockchain. These instances can be run on different computers, or the same computer using different ports. You can issue commands and get information from the node using HTTP RESTful endpoints.
 
 ## Installation
-You will need `python3` and `pip3` to run this code. First checkout the code from the repo:
+You will need `python3` and `pip3` to run this code. First clone the repo:
 ```
-git checkout https://github.com/dapperlabs/blockchain-workshop.git
+git clone https://github.com/dapperlabs/blockchain-workshop.git
 ```
 Install requirements:
 ```
