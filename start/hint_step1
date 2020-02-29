@@ -1,0 +1,2 @@
+1. A very small change in a hash's input has a very large change in it's output! Think twice about the role of nonce in block's hash!
+2. Use fill_block and provide the needed fields!

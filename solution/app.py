@@ -198,14 +198,6 @@ def consensus():
 
         # if successful
         if response.status_code == 200:
-            # update our peer list with the nodes peers
-            new_peers = response.json()['peers']
-            for peer in new_peers:
-                # dont add a nodes address to its own peer list
-                if not peer.startswith(request.host_url):
-                    # this function adds a new peer to peer list
-                    add_peer(peer)
-            
             # check peers blockchain size
             size = response.json()['chain_size']
             # we're only interested in blockchains longer than our own.

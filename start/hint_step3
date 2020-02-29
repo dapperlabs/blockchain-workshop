@@ -1,0 +1,2 @@
+1. Remember your transaction will fail if you haven't mined coins to spend!
+2. Use sign_transaction!

@@ -1,0 +1,2 @@
+1. To reach consensus, you have to find the longest chain, which has the biggest size!
+2. Use node.sync_with_dump to sync the chain.
