@@ -222,7 +222,7 @@ def new_block_mined():
         # A already has this block or not. This is a quick fix for this problem, we just discard blocks
         # that we have received before! hash is a reliable way of ensuring the block is the same as the 
         # received one
-        if received_block.compute_hash() == node.blockchain.get_last_block().compute_hash():
+        if node.blockchain.get_blockchain_size() > 0 and received_block.compute_hash() == node.blockchain.get_last_block().compute_hash():
             return 'Accepted', 201
         # add_block checks the block and makes sure if can be added to our nodes blockchain
         if node.blockchain.add_block(received_block):

@@ -188,7 +188,7 @@ class Blockchain:
         return len(self.blocks)
     
     # get_last_block returns the last block
-    def get_last_block(self):
+    def get_last_block(self):        
         return self.blocks[-1]
     
     # add_block adds a block to our blockchain. This function checks everything to make sure

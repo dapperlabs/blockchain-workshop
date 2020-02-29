@@ -66,6 +66,7 @@ class Node:
         if len(self.blockchain.blocks) == 0:
             self.blockchain.create_genesis_block()
             logger.info('Genesis block created!') 
+            return True
         else:
             # calculate what the next diffculty should be
             new_block_difficulty = self.blockchain.compute_next_difficulty()        
