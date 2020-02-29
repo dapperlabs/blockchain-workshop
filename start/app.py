@@ -188,7 +188,7 @@ def consensus():
             # call peers /greet endpoint to find out about their blockchain
             response = requests.post(peer_address + '/greet',
                                 data=json.dumps(data), headers=headers)
-        except requests.ConnectionError:
+        except:
             # if we can't connect to a peer, remove it from our list
             peers.remove(peer_address)
             logger.info('Could not connect to %s! Peer removed.' % peer_address)
@@ -240,7 +240,7 @@ def new_block_mined():
                         url = peer_address + '/new_block_mined'
                         requests.post(url, data=request.data, headers=request.headers)    
                         logger.info('Forwarded to %s' % peer_address)    
-                    except requests.ConnectionError:                        
+                    except:                        
                         # could not connect to peer! remove it
                         peers.remove(peer_address)
                         logger.info('Could not connect to %s! Peer removed.' % peer_address)
@@ -269,7 +269,7 @@ def announce_new_block(block):
             url = peer_address + '/new_block_mined'
             requests.post(url, data=data, headers=headers)    
             logger.info('Announced to %s' % peer_address)    
-        except requests.ConnectionError:
+        except:
             # could not connect to peer! remove it
             peers.remove(peer_address)
             logger.info('Could not connect to %s! Peer removed.' % peer_address)        
