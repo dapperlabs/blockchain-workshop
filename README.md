@@ -31,6 +31,9 @@ Open your browser and navigate to `http://localhost:5000/info`. You should see:
 
 **Note** Depending on your system you may have to use `pip` instead of `pip3`, `python` instead of `python3` or you may need to use `sudo` with the above commands. Let us know if you have trouble with the setup!
 
+If you have trouble installing `pycrypto` (mostly Windows or Python 3.8 users) check out this branch:  https://github.com/dapperlabs/blockchain-workshop/tree/py3.8
+Code on this branch does not implement digital signing, thus removes `pycrypto` from dependencies.
+
 ## Endpoints Reference
 The code provides these RESTful endpoints:
 * `GET /info` gives basic information about this node. This endpoint returns the current blockchain size, a list of this node's peers and the full blockchain dump for this node. You can use this to debug your node. This endpoint is also used, when another peer wants to sync with this node's blockchain.
